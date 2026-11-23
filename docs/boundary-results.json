@@ -1,0 +1,18 @@
+{
+  "full_4000_character_report": true,
+  "live_hazard_blocked": true,
+  "secret_redacted_before_storage": true,
+  "punctuated_metadata_redacted": true,
+  "max_report_with_short_secret": true,
+  "expired_jwt_rejected": true,
+  "concurrent_handoff_count": 1,
+  "unauthenticated_receipt_rejected": true,
+  "n8n_execution_ids": [
+    "139",
+    "140",
+    "141",
+    "144"
+  ],
+  "retained_trigger_reusable_key_absent": true,
+  "retained_trigger_test_secrets_absent": true
+}

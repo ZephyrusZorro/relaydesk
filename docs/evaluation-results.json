@@ -1,0 +1,170 @@
+{
+  "demo_cases": [
+    {
+      "query": "The office wireless network has no internet on my laptop",
+      "expected_category": "network",
+      "category": "network",
+      "expected_source": "KB-NET-01",
+      "retrieved_ids": [
+        "KB-NET-01"
+      ],
+      "n8n_execution": "109",
+      "seconds": 0.901,
+      "passed": true
+    },
+    {
+      "query": "The VPN tunnel drops every few minutes when working remotely",
+      "expected_category": "vpn",
+      "category": "vpn",
+      "expected_source": "KB-VPN-01",
+      "retrieved_ids": [
+        "KB-VPN-01"
+      ],
+      "n8n_execution": "111",
+      "seconds": 0.368,
+      "passed": true
+    },
+    {
+      "query": "My authenticator changed phones and I cannot complete MFA",
+      "expected_category": "account",
+      "category": "account",
+      "expected_source": "KB-ACC-01",
+      "retrieved_ids": [
+        "KB-ACC-01"
+      ],
+      "n8n_execution": "113",
+      "seconds": 0.65,
+      "passed": true
+    },
+    {
+      "query": "The spreadsheet application crashes when it opens",
+      "expected_category": "software",
+      "category": "software",
+      "expected_source": "KB-SOFT-01",
+      "retrieved_ids": [
+        "KB-SOFT-01"
+      ],
+      "n8n_execution": "115",
+      "seconds": 0.521,
+      "passed": true
+    },
+    {
+      "query": "My monitor shows no image after connecting the dock",
+      "expected_category": "device",
+      "category": "device",
+      "expected_source": "KB-DEV-01",
+      "retrieved_ids": [
+        "KB-DEV-01"
+      ],
+      "n8n_execution": "117",
+      "seconds": 0.378,
+      "passed": true
+    },
+    {
+      "query": "The ethernet connection has no internet for the whole office",
+      "expected_category": "network",
+      "category": "network",
+      "expected_source": "KB-NET-01",
+      "retrieved_ids": [
+        "KB-NET-01"
+      ],
+      "n8n_execution": "119",
+      "seconds": 0.332,
+      "passed": true
+    },
+    {
+      "query": "I forgot my password and the sign-in page locks my account",
+      "expected_category": "account",
+      "category": "account",
+      "expected_source": "KB-ACC-01",
+      "retrieved_ids": [
+        "KB-ACC-01"
+      ],
+      "n8n_execution": "121",
+      "seconds": 0.533,
+      "passed": true
+    },
+    {
+      "query": "The reception printer is offline with an error on its screen",
+      "expected_category": "device",
+      "category": "device",
+      "expected_source": "KB-DEV-01",
+      "retrieved_ids": [
+        "KB-DEV-01"
+      ],
+      "n8n_execution": "123",
+      "seconds": 0.441,
+      "passed": true
+    },
+    {
+      "query": "Can you predict a stock price for tomorrow",
+      "expected_category": "other",
+      "category": "other",
+      "expected_source": null,
+      "retrieved_ids": [],
+      "n8n_execution": "125",
+      "seconds": 0.486,
+      "passed": true
+    },
+    {
+      "query": "Please recommend a chocolate cake recipe",
+      "expected_category": "other",
+      "category": "other",
+      "expected_source": null,
+      "retrieved_ids": [],
+      "n8n_execution": "127",
+      "seconds": 0.526,
+      "passed": true
+    }
+  ],
+  "routing_accuracy": 1.0,
+  "source_recall_at_3": 1.0,
+  "supported_cases": 8,
+  "out_of_domain_cases": 2,
+  "lifecycle_ticket": "RD-39B6AC57",
+  "lifecycle_passed": true,
+  "prompt_injection_handoff_blocked": true,
+  "live": {
+    "ticket_id": "RD-2B850DFE",
+    "seconds": 6.2,
+    "mode_used": "live",
+    "flags": [],
+    "trace": [
+      {
+        "name": "Intake validation",
+        "detail": "Validated input bounds and applied limited secret redaction. Review sensitive data before sharing.",
+        "kind": "guard"
+      },
+      {
+        "name": "Classifier specialist",
+        "detail": "Local LLM proposed vpn; bounded route: vpn / Network Support. Priority: normal.",
+        "kind": "model"
+      },
+      {
+        "name": "Evidence retriever",
+        "detail": "LangChain BM25 retrieved 1 matching procedure chunks. Scores are lexical relevance, not confidence.",
+        "kind": "retrieval"
+      },
+      {
+        "name": "Resolution specialist",
+        "detail": "Local LLM drafted a response using retrieved procedure IDs. Draft still requires review.",
+        "kind": "model"
+      },
+      {
+        "name": "Reviewer specialist",
+        "detail": "Supported draft: Draft is supported by the cited evidence and does not ask for passwords, bypass security, run commands or claim actions have already happened.",
+        "kind": "model"
+      },
+      {
+        "name": "Policy guard",
+        "detail": "Checked citation IDs, source trust and bounded unsafe-action patterns. Draft eligible for operator approval.",
+        "kind": "guard"
+      }
+    ],
+    "citations": [
+      "KB-VPN-01"
+    ],
+    "response": "Check network connectivity before retrying the approved VPN client once and verify that sign-in or MFA has expired. [KB-VPN-01]",
+    "execution_id": "133"
+  }
+}

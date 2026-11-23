@@ -21,29 +21,30 @@
 
 Create `app/{config,schemas,store,knowledge,corpus,main}.py` and `tests/test_service.py`.
 
-- [ ] Write and run failing tests for relevant-source retrieval, unknown topics, validation, persistence, duplicate IDs, stale approvals, auth and atomic outbox creation.
-- [ ] Implement storage/retrieval endpoints and constrained internal contracts.
-- [ ] Run the full Python suite and commit the verified stage.
+- [x] Write and run failing tests for relevant-source retrieval, unknown topics, validation, persistence, duplicate IDs, stale approvals, auth and atomic outbox creation.
+- [x] Implement storage/retrieval endpoints and constrained internal contracts.
+- [x] Run the full Python suite and commit the verified stage.
 
 ## Stage 2 — n8n agent orchestration
 
 Create `workflows/logic.mjs`, `scripts/build-workflows.mjs`, exported JSON and `tests/workflow.test.mjs`.
 
-- [ ] Write and run failing JS tests for routing, safe demo drafts, citation rejection, model fallback and prompt-like inputs.
-- [ ] Implement native n8n classifier, resolver and reviewer nodes, branching, retrieval, deterministic guard, persistence and HTTP response.
-- [ ] Create a separate approved-handoff workflow and optional disabled email intake.
-- [ ] Execute JS and Python suites; import workflows into Docker n8n and exercise real webhooks. Commit the stage.
+- [x] Write and run failing JS tests for routing, safe demo drafts, citation rejection, model fallback and prompt-like inputs.
+- [x] Implement native n8n classifier, resolver and reviewer nodes, branching, retrieval, deterministic guard, persistence and HTTP response.
+- [x] Create a separate approved-handoff workflow and optional disabled email intake.
+- [x] Execute JS and Python suites; import workflows into Docker n8n and exercise real webhooks. Commit the stage.
 
 ## Stage 3 — Portal, speech and container experience
 
 Create `app/static/*`, `Dockerfile`, `compose.yaml`, startup/setup scripts and browser smoke tests.
 
-- [ ] Implement a responsive queue, new request/chat portal, detail view, agent/evidence panels, editable approval, knowledge ingestion/search, handoff history and export.
-- [ ] Add feature-detected browser speech input/output with explicit unavailable states.
-- [ ] Build containers; verify create-to-resolve in n8n and portal at desktop/mobile widths.
+- [x] Implement a responsive queue, new request/chat portal, detail view, agent/evidence panels, editable approval, knowledge ingestion/search, handoff history and export.
+- [x] Add feature-detected browser speech input/output with explicit unavailable states.
+- [x] Build containers; verify create-to-resolve in n8n and portal at desktop/mobile widths.
 
 ## Stage 4 — Evaluation, review and handover
 
-- [ ] Run held-out synthetic retrieval/routing examples and real Ollama specialist execution; publish exact sample counts and limits.
-- [ ] Obtain a fresh-context review under requesting-code-review, fix material findings with regression tests and rerun verification.
-- [ ] Provide README, architecture, original problem statement, technical research/references, demo script, verification report and clean source ZIP. Keep staged local Git commits.
+- [x] Run held-out synthetic retrieval/routing examples and real Ollama specialist execution; publish exact sample counts and limits.
+- [x] Obtain a fresh-context review under requesting-code-review, fix material findings with regression tests and rerun verification.
+- [x] Provide README, architecture, original problem statement, technical research/references, demo script, verification report and clean source ZIP. Keep staged local Git commits.
+

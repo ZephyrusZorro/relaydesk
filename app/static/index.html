@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0c111b" />
+    <meta
+      name="description"
+      content="RelayDesk — evidence-backed IT support, orchestrated in n8n."
+    />
+    <title>RelayDesk · Support operations</title>
+    <link rel="icon" href="/static/mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/styles.css" />
+    <script type="module" src="/static/app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <aside class="sidebar">
+      <a class="brand" href="#overview"
+        ><img src="/static/mark.svg" alt="" width="36" height="36" /><span
+          >relaydesk<span class="brand-dot">.</span></span
+        ></a
+      >
+      <div class="workspace">
+        <span class="workspace-icon">R</span>
+        <div>Relay workspace<small>Local support operations</small></div>
+        <span class="local-tag">LOCAL</span>
+      </div>
+      <p class="nav-label">WORKSPACE</p>
+      <nav aria-label="Main navigation">
+        <button data-view="overview" class="nav-item active">
+          <span data-icon="grid"></span>Overview
+        </button>
+        <button data-view="queue" class="nav-item">
+          <span data-icon="inbox"></span>Request queue<span
+            id="nav-count"
+            class="nav-count"
+            >0</span
+          >
+        </button>
+        <button data-view="knowledge" class="nav-item">
+          <span data-icon="book"></span>Knowledge
+        </button>
+        <button data-view="automations" class="nav-item">
+          <span data-icon="workflow"></span>Automations
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="engine-card">
+          <span class="tiny-kicker">ORCHESTRATION ENGINE</span>
+          <div>
+            <span class="n8n-symbol">⌘</span><strong>Built around n8n</strong>
+          </div>
+          <p>Three specialists. Visible sources.<br />One human decision.</p>
+          <a
+            id="canvas-link"
+            href="http://localhost:15678"
+            target="_blank"
+            rel="noopener"
+            >Open workflow editor<span data-icon="external"></span
+          ></a>
+        </div>
+        <button id="about-button" class="operator">
+          <span class="avatar">OP</span>
+          <div>Support operator<small>Single-user demo workspace</small></div>
+          <span data-icon="help"></span>
+        </button>
+      </div>
+    </aside>
+    <div class="shell">
+      <header class="topbar">
+        <div class="breadcrumbs">
+          Workspace<span>/</span><strong id="breadcrumb">Overview</strong>
+        </div>
+        <div class="top-actions">
+          <span id="engine-status" class="engine-status">Checking n8n</span
+          ><button
+            class="icon-button"
+            id="refresh-button"
+            aria-label="Refresh workspace"
+            title="Refresh workspace"
+          >
+            <span data-icon="refresh"></span></button
+          ><button class="button primary" id="new-button">
+            <span data-icon="plus"></span>New request
+          </button>
+        </div>
+      </header>
+      <main id="main" tabindex="-1">
+        <div id="connection-banner" class="banner" hidden></div>
+        <section id="overview-view" class="view">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">SUPPORT OPERATIONS</p>
+              <h1>Every request. A clear next step.</h1>
+              <p class="subtitle">
+                Turn scattered IT issues into reviewed, evidence-backed
+                responses.
+              </p>
+            </div>
+            <span class="date-label" id="today-label"></span>
+          </div>
+          <div class="stats" id="stats"></div>
+          <div class="overview-grid">
+            <section class="panel queue-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Needs your attention</h2>
+                  <p>Drafted by the workflow. Decided by you.</p>
+                </div>
+                <button class="text-button" data-goto="queue">
+                  View all requests <span data-icon="chevron"></span>
+                </button>
+              </div>
+              <div id="attention-list" class="request-list"></div>
+            </section>
+            <section class="panel workflow-panel">
+              <div class="panel-heading">
+                <div>
+                  <div class="inline-heading">
+                    <h2>The path to resolution</h2>
+                    <span class="tag violet">n8n</span>
+                  </div>
+                  <p>A workflow you can inspect at every step.</p>
+                </div>
+              </div>
+              <div class="pipeline" id="pipeline"></div>
+              <div class="human-gate">
+                <span data-icon="shield"></span>
+                <div>
+                  <strong>You make the final call</strong>
+                  <p>No handoff happens before operator approval.</p>
+                </div>
+              </div>
+            </section>
+            <section class="panel mix-panel">
+              <div class="panel-heading">
+                <div>
+                  <h2>Requests by service</h2>
+                  <p>Your current workspace, by category.</p>
+                </div>
+                <span data-icon="chart"></span>
+              </div>
+              <div id="service-mix"></div>
+            </section>
+            <section class="evidence-feature">
+              <span class="tag mint">RETRIEVAL, WITH RECEIPTS</span>
+              <h2>Answers that show<br />their working.</h2>
+              <p>
+                Open the source behind a draft. Inspect the specialist trail.
+                Approve with context.
+              </p>
+              <button class="button secondary" data-goto="knowledge">
+                Explore the knowledge library <span data-icon="book"></span>
+              </button>
+              <div class="source-decoration" aria-hidden="true">
+                <span>KB-VPN-01</span>
+                <div></div>
+                <div></div>
+                <div></div>
+                <b>Source attached</b>
+              </div>
+            </section>
+          </div>
+        </section>
+        <section id="queue-view" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">REQUEST QUEUE</p>
+              <h1>Keep support moving.</h1>
+              <p class="subtitle">
+                Inspect the evidence, refine the response and choose the next
+                step.
+              </p>
+            </div>
+            <button class="button secondary" id="export-button">
+              <span data-icon="download"></span>Export workspace
+            </button>
+          </div>
+          <div class="panel">
+            <div class="filters">
+              <label class="search-box"
+                ><span data-icon="search"></span
+                ><input
+                  id="queue-search"
+                  placeholder="Search requests, people or locations"
+                  aria-label="Search requests" /></label
+              ><select id="status-filter" aria-label="Filter by status">
+                <option value="">All statuses</option>
+                <option value="needs_review">Needs review</option>
+                <option value="approved">Approved</option>
+                <option value="resolved">Resolved</option></select
+              ><select id="category-filter" aria-label="Filter by service">
+                <option value="">All services</option>
+                <option value="network">Network</option>
+                <option value="vpn">VPN</option>
+                <option value="account">Account</option>
+                <option value="software">Software</option>
+                <option value="device">Device</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div id="queue-table"></div>
+          </div>
+        </section>
+        <section id="knowledge-view" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">KNOWLEDGE LIBRARY</p>
+              <h1>Better context. Better support.</h1>
+              <p class="subtitle">
+                A small, inspectable procedure library powers every grounded
+                response.
+              </p>
+            </div>
+            <button class="button secondary" id="add-knowledge-button">
+              <span data-icon="plus"></span>Add procedure
+            </button>
+          </div>
+          <div class="notice">
+            <span data-icon="info"></span>
+            <p>
+              The included procedures are fictional demo material. Replace them
+              with reviewed internal guidance before real use. Retrieval uses
+              BM25 lexical matching through LangChain.
+            </p>
+          </div>
+          <form id="knowledge-search-form" class="panel retrieval-playground">
+            <div>
+              <h2>Test the retrieval</h2>
+              <p>See which source chunks a question brings back.</p>
+            </div>
+            <label class="search-box"
+              ><span data-icon="search"></span
+              ><input
+                id="knowledge-query"
+                minlength="3"
+                maxlength="2000"
+                placeholder="e.g. VPN tunnel keeps disconnecting"
+                aria-label="Retrieval question"
+                required /></label
+            ><button class="button primary" type="submit">Find evidence</button>
+          </form>
+          <div id="retrieval-results" aria-live="polite"></div>
+          <div class="section-heading">
+            <h2>Procedure library</h2>
+            <span id="document-count" class="muted"></span>
+          </div>
+          <div id="knowledge-grid" class="knowledge-grid"></div>
+        </section>
+        <section id="automations-view" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">AUTOMATIONS</p>
+              <h1>Approved first. Automated next.</h1>
+              <p class="subtitle">
+                A durable outbox connects your decisions to the n8n handoff
+                workflow.
+              </p>
+            </div>
+            <button class="button primary" id="run-handoff">
+              <span data-icon="play"></span>Run pending handoffs
+            </button>
+          </div>
+          <div class="automation-cards">
+            <article class="panel automation-card">
+              <span class="automation-icon violet"
+                ><span data-icon="workflow"></span
+              ></span>
+              <h2>Intake & specialist agents</h2>
+              <p>
+                Validate, classify, retrieve, draft and review. Every new
+                request runs through this n8n canvas.
+              </p>
+              <span class="tag mint">Core workflow</span
+              ><a
+                class="workflow-link"
+                href="http://localhost:15678/workflow/RelayDeskIntake01"
+                target="_blank"
+                rel="noopener"
+                >Inspect in n8n <span data-icon="external"></span
+              ></a>
+            </article>
+            <article class="panel automation-card">
+              <span class="automation-icon mint"
+                ><span data-icon="shield"></span
+              ></span>
+              <h2>Approved support handoff</h2>
+              <p>
+                Reads pending approved events and records idempotent receipts.
+                Retries do not duplicate local handoffs.
+              </p>
+              <span class="tag mint">Core workflow</span
+              ><a
+                class="workflow-link"
+                href="http://localhost:15678/workflow/RelayDeskHandoff1"
+                target="_blank"
+                rel="noopener"
+                >Inspect in n8n <span data-icon="external"></span
+              ></a>
+            </article>
+            <article class="panel automation-card">
+              <span class="automation-icon amber"
+                ><span data-icon="mail"></span
+              ></span>
+              <h2>Optional email intake</h2>
+              <p>
+                Connect an IMAP mailbox to submit email requests through the
+                same pipeline. No outbound email is sent.
+              </p>
+              <span class="tag neutral">Mailbox setup required</span
+              ><a
+                class="workflow-link"
+                href="http://localhost:15678/workflow/RelayDeskEmail01"
+                target="_blank"
+                rel="noopener"
+                >Configure in n8n <span data-icon="external"></span
+              ></a>
+            </article>
+          </div>
+          <div class="panel">
+            <div class="panel-heading">
+              <div>
+                <h2>Handoff history</h2>
+                <p>
+                  These receipts record an internal handoff, not an external
+                  message.
+                </p>
+              </div>
+              <span id="outbox-count" class="tag neutral"></span>
+            </div>
+            <div id="outbox-list"></div>
+          </div>
+        </section>
+        <footer class="footer">
+          <span
+            ><span class="footer-mark">R</span>RelayDesk · An original n8n
+            capstone</span
+          ><span
+            >Local workspace <span class="footer-separator">·</span> Human
+            decisions, visible evidence</span
+          >
+        </footer>
+      </main>
+    </div>
+    <dialog id="request-dialog" class="modal">
+      <form id="request-form">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">WEB & VOICE INTAKE</p>
+            <h2>What needs a hand?</h2>
+          </div>
+          <button
+            type="button"
+            class="icon-button"
+            data-close="request-dialog"
+            aria-label="Close new request"
+          >
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <p class="muted">
+          Describe an IT issue. n8n will prepare a sourced draft for operator
+          review.
+        </p>
+        <div class="form-row">
+          <label
+            >Your name<input
+              name="requester"
+              id="requester"
+              value="Support visitor"
+              maxlength="80"
+              required /></label
+          ><label
+            >Location / team<input
+              name="location"
+              id="location"
+              placeholder="e.g. Studio · Floor 2"
+              maxlength="160"
+              required
+          /></label>
+        </div>
+        <label
+          >Describe the issue<textarea
+            name="text"
+            id="report-text"
+            minlength="8"
+            maxlength="4000"
+            rows="5"
+            placeholder="What happened, which service is affected, and what error do you see?"
+            required
+          ></textarea>
+        </label>
+        <div class="voice-row">
+          <button
+            class="button secondary small"
+            type="button"
+            id="dictate-button"
+          >
+            <span data-icon="mic"></span>Dictate request</button
+          ><select
+            id="speech-language"
+            aria-label="Speech recognition language"
+          >
+            <option value="en-IN">English · India</option>
+            <option value="en-US">English · US</option>
+            <option value="hi-IN">Hindi · India</option></select
+          ><span id="speech-status" class="muted" role="status"></span>
+        </div>
+        <p class="microcopy">
+          Do not include passwords or recovery codes. Browser dictation may use
+          your browser provider's speech service. Routing and procedures are
+          evaluated in English.
+        </p>
+        <div class="example-row">
+          <span>Try an example</span
+          ><button type="button" data-example="vpn">VPN drops</button
+          ><button type="button" data-example="network">Wi-Fi outage</button
+          ><button type="button" data-example="account">Locked account</button>
+        </div>
+        <fieldset class="mode-options">
+          <legend>Workflow mode</legend>
+          <label class="mode-option"
+            ><input type="radio" name="mode" value="demo" checked /><span
+              ><strong>Demo</strong
+              ><small>Deterministic rules · no model needed</small></span
+            ></label
+          ><label class="mode-option"
+            ><input type="radio" name="mode" value="live" /><span
+              ><strong>Local LLM</strong
+              ><small>Three Ollama specialist stages</small></span
+            ></label
+          >
+        </fieldset>
+        <div id="request-progress" class="progress-note" role="status" hidden>
+          <span class="spinner"></span>
+          <div>
+            <strong>Executing the n8n workflow</strong>
+            <p>
+              Local model runs may take a few minutes. Keep this dialog open.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <span class="microcopy">No action is taken before approval.</span
+          ><button type="submit" class="button primary" id="submit-request">
+            <span data-icon="workflow"></span>Run support workflow
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="detail-dialog" class="drawer">
+      <div id="detail-content"></div>
+    </dialog>
+    <dialog id="knowledge-dialog" class="modal">
+      <form id="knowledge-form">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">KNOWLEDGE INGESTION</p>
+            <h2>Add a procedure</h2>
+          </div>
+          <button
+            type="button"
+            class="icon-button"
+            data-close="knowledge-dialog"
+            aria-label="Close procedure form"
+          >
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <label
+          >Procedure title<input
+            name="title"
+            minlength="3"
+            maxlength="180"
+            required /></label
+        ><label
+          >Service<select name="category">
+            <option value="network">Network</option>
+            <option value="vpn">VPN</option>
+            <option value="account">Account</option>
+            <option value="software">Software</option>
+            <option value="device">Device</option>
+            <option value="other">Other</option>
+          </select></label
+        ><label
+          >Procedure text<textarea
+            name="content"
+            rows="8"
+            minlength="40"
+            maxlength="16000"
+            placeholder="Paste a procedure with its scope, supported steps and escalation path."
+            required
+          ></textarea></label
+        ><label class="checkbox-row"
+          ><input type="checkbox" name="trusted" /><span
+            >I have reviewed this procedure and approve it for this local
+            knowledge library.</span
+          ></label
+        >
+        <p class="microcopy">
+          Unreviewed sources remain searchable, but block automated handoff when
+          retrieved.
+        </p>
+        <div class="modal-footer">
+          <span></span
+          ><button class="button primary" type="submit">Save procedure</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="about-dialog" class="modal about-modal">
+      <div class="modal-header">
+        <h2>Built for an inspectable demo.</h2>
+        <button
+          class="icon-button"
+          data-close="about-dialog"
+          aria-label="Close workspace information"
+        >
+          <span data-icon="close"></span>
+        </button>
+      </div>
+      <p>
+        RelayDesk is an original IT support capstone. n8n coordinates three
+        bounded specialist roles: classifier, resolver and reviewer. Native
+        LangChain nodes connect them to a local Ollama model.
+      </p>
+      <p>
+        The data service provides a LangChain BM25 retriever and SQLite
+        persistence. The included procedures are fictional. A source citation
+        and model review do not prove a response is correct; the operator
+        reviews the final answer.
+      </p>
+      <p>
+        The portal runs as a local single-user workspace. Optional mailbox
+        intake requires configuration. Speech availability depends on your
+        browser and OS.
+      </p>
+      <button class="button secondary" id="access-key-button">
+        Set portal access key
+      </button>
+    </dialog>
+    <dialog id="access-dialog" class="modal">
+      <form id="access-form">
+        <div class="modal-header">
+          <h2>Open your workspace</h2>
+          <button
+            type="button"
+            class="icon-button"
+            data-close="access-dialog"
+            aria-label="Close access form"
+          >
+            <span data-icon="close"></span>
+          </button>
+        </div>
+        <p class="muted">
+          Enter the portal key configured for this local instance. The key is
+          kept only in this browser session.
+        </p>
+        <label for="portal-access-key">Portal access key</label
+        ><input
+          id="portal-access-key"
+          type="password"
+          autocomplete="off"
+          style="width: 100%"
+        />
+        <p id="access-error" class="error-note" hidden></p>
+        <div class="modal-footer">
+          <button type="button" class="text-button" id="clear-access-key">
+            Clear session key</button
+          ><button type="submit" class="button primary">Open workspace</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  </body>
+</html>

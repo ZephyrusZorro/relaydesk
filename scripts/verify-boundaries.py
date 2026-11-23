@@ -1,9 +1,12 @@
 """Additional real n8n edge checks; all data is synthetic and local."""
 import json
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from uuid import uuid4
 import httpx
+import jwt
+from dotenv import dotenv_values
 
 
 def run():
@@ -30,7 +33,16 @@ def run():
             result.raise_for_status()
         assert sum(result.json()["delivered"] for result in results) == 1
         assert client.post("/internal/handoff/receipt", json={"event_id": "forged-event"}).status_code == 401
-        return {"full_4000_character_report": True, "live_hazard_blocked": True, "secret_redacted_before_storage": True, "concurrent_handoff_count": sum(r.json()["delivered"] for r in results), "unauthenticated_receipt_rejected": True, "n8n_execution_ids": [long_ticket["execution_id"], hazard["execution_id"], redacted["execution_id"]]}
+        exact_text = ("VPN tunnel fails. " + "x" * 4000)[:3992] + " token=x"
+        response = client.post("/api/reports", json={"text": exact_text, "location": "token=mock.suffix42", "requester": "Boundary verification", "request_id": "boundary-" + uuid4().hex, "mode": "demo"})
+        response.raise_for_status()
+        bounded = response.json()
+        assert len(bounded["text"]) == 4000 and "mock.suffix42" not in json.dumps(bounded)
+        config = dotenv_values(".env")
+        expired = jwt.encode({"sub": "relaydesk-expiry-test", "exp": int(time.time()) - 60}, config["RELAYDESK_INTERNAL_KEY"], algorithm="HS256")
+        rejected = httpx.post("http://localhost:" + config.get("RELAYDESK_N8N_PORT", "15678") + "/webhook/relaydesk-intake", json={}, headers={"Authorization": "Bearer " + expired}, timeout=10)
+        assert rejected.status_code in {401, 403}
+        return {"full_4000_character_report": True, "live_hazard_blocked": True, "secret_redacted_before_storage": True, "punctuated_metadata_redacted": True, "max_report_with_short_secret": True, "expired_jwt_rejected": True, "concurrent_handoff_count": sum(r.json()["delivered"] for r in results), "unauthenticated_receipt_rejected": True, "n8n_execution_ids": [long_ticket["execution_id"], hazard["execution_id"], redacted["execution_id"], bounded["execution_id"]]}
 
 
 if __name__ == "__main__":

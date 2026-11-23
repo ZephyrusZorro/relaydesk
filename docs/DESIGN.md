@@ -16,7 +16,7 @@ The default demo mode uses clearly labeled deterministic stages and works withou
 
 ## Persistence and integrity
 
-SQLite stores tickets, knowledge, immutable audit rows and an outbox. Request IDs prevent duplicate ingestion. Optimistic ticket versions reject stale approvals. Approval and outbox creation occur in the same transaction; only approved tickets can create a handoff. An n8n handoff workflow claims events and records idempotent receipts. Delivery is at-least-once; receipt deduplication prevents duplicate local handoff records. Edits remain operator responsibility.
+SQLite stores tickets, knowledge, append-only application audit rows and an outbox. Request IDs prevent duplicate ingestion. Optimistic ticket versions reject stale approvals. Approval and outbox creation occur in the same transaction; only approved tickets can create a handoff. An n8n handoff workflow reads pending events and records idempotent receipts. Delivery is at-least-once; receipt deduplication prevents duplicate local handoff records. Edits remain operator responsibility. These audit records are not a tamper-proof or cryptographically immutable ledger.
 
 Seeded procedures, employee names and service targets are fictional demo material. Citations expose stable chunk IDs and excerpts. New documents are untrusted until explicitly reviewed. Evidence absence, prompt-like input and invalid citations block automated handoff. Browser speech synthesis reads an answer and recognition optionally fills the report field. Speech availability depends on browser/OS support; typed input always works.
 
