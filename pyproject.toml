@@ -1,0 +1,22 @@
+[project]
+name = "relaydesk"
+version = "1.0.0"
+description = "n8n-first voice support operations with evidence-backed specialist agents"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi>=0.115,<1", "uvicorn[standard]>=0.34,<1",
+  "pydantic-settings>=2.7,<3", "langchain-core>=1.0,<2",
+  "rank-bm25>=0.2.2,<0.3", "httpx>=0.28,<1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "pytest-cov>=6,<8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/corpus.py"]

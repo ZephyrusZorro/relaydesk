@@ -1,0 +1,68 @@
+name: relaydesk
+services:
+  desk:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${RELAYDESK_PORT:-18080}:8000"
+    environment:
+      RELAYDESK_DB_PATH: /data/relaydesk.db
+      RELAYDESK_INTERNAL_KEY: ${RELAYDESK_INTERNAL_KEY:?Run the setup script first}
+      RELAYDESK_PORTAL_KEY: ${RELAYDESK_PORTAL_KEY:-}
+      RELAYDESK_N8N_URL: http://n8n:5678
+      RELAYDESK_OLLAMA_URL: ${RELAYDESK_OLLAMA_URL:-http://host.docker.internal:11434}
+      RELAYDESK_OLLAMA_MODEL: ${RELAYDESK_OLLAMA_MODEL:-llama3.2:3b}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: ["desk_data:/data"]
+    healthcheck:
+      test: ["CMD", "/srv/relaydesk/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.48.7
+    restart: unless-stopped
+    ports: ["127.0.0.1:${RELAYDESK_N8N_PORT:-15678}:5678"]
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      N8N_EDITOR_BASE_URL: http://localhost:${RELAYDESK_N8N_PORT:-15678}
+      WEBHOOK_URL: http://localhost:${RELAYDESK_N8N_PORT:-15678}/
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Run the setup script first}
+      N8N_SECURE_COOKIE: "false"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      N8N_BLOCK_FS_WRITE_ACCESS: "true"
+      N8N_EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_MAX_AGE: "168"
+      GENERIC_TIMEZONE: Asia/Kolkata
+      TZ: Asia/Kolkata
+      RELAYDESK_INTERNAL_KEY: ${RELAYDESK_INTERNAL_KEY}
+      RELAYDESK_OLLAMA_URL: ${RELAYDESK_OLLAMA_URL:-http://host.docker.internal:11434}
+      RELAYDESK_OLLAMA_MODEL: ${RELAYDESK_OLLAMA_MODEL:-llama3.2:3b}
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./workflows:/opt/relaydesk/workflows:ro
+      - ./scripts/n8n-init.mjs:/opt/relaydesk/n8n-init.mjs:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+
+  ollama:
+    image: ollama/ollama:0.13.0
+    profiles: ["local-model"]
+    volumes: ["ollama_data:/root/.ollama"]
+    restart: unless-stopped
+
+volumes:
+  desk_data:
+  n8n_data:
+  ollama_data:
