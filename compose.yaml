@@ -10,12 +10,19 @@ services:
       RELAYDESK_INTERNAL_KEY: ${RELAYDESK_INTERNAL_KEY:?Run the setup script first}
       RELAYDESK_PORTAL_KEY: ${RELAYDESK_PORTAL_KEY:-}
       RELAYDESK_N8N_URL: http://n8n:5678
+      RELAYDESK_EDITOR_URL: http://localhost:${RELAYDESK_N8N_PORT:-15678}
       RELAYDESK_OLLAMA_URL: ${RELAYDESK_OLLAMA_URL:-http://host.docker.internal:11434}
       RELAYDESK_OLLAMA_MODEL: ${RELAYDESK_OLLAMA_MODEL:-llama3.2:3b}
     extra_hosts: ["host.docker.internal:host-gateway"]
     volumes: ["desk_data:/data"]
     healthcheck:
-      test: ["CMD", "/srv/relaydesk/.venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
+      test:
+        [
+          "CMD",
+          "/srv/relaydesk/.venv/bin/python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')",
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -38,26 +45,33 @@ services:
       N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
       N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
       N8N_BLOCK_FS_WRITE_ACCESS: "true"
-      N8N_EXECUTIONS_DATA_PRUNE: "true"
+      EXECUTIONS_DATA_PRUNE: "true"
       EXECUTIONS_DATA_MAX_AGE: "168"
       GENERIC_TIMEZONE: Asia/Kolkata
       TZ: Asia/Kolkata
       RELAYDESK_INTERNAL_KEY: ${RELAYDESK_INTERNAL_KEY}
       RELAYDESK_OLLAMA_URL: ${RELAYDESK_OLLAMA_URL:-http://host.docker.internal:11434}
       RELAYDESK_OLLAMA_MODEL: ${RELAYDESK_OLLAMA_MODEL:-llama3.2:3b}
+      RELAYDESK_MAILBOX_NAMESPACE: ${RELAYDESK_MAILBOX_NAMESPACE:-support-inbox}
     extra_hosts: ["host.docker.internal:host-gateway"]
     volumes:
       - n8n_data:/home/node/.n8n
       - ./workflows:/opt/relaydesk/workflows:ro
-      - ./scripts/n8n-init.mjs:/opt/relaydesk/n8n-init.mjs:ro
+      - ./scripts:/opt/relaydesk/scripts:ro
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:5678/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 18
 
   ollama:
-    image: ollama/ollama:0.13.0
+    image: ollama/ollama:0.40.17
     profiles: ["local-model"]
     volumes: ["ollama_data:/root/.ollama"]
     restart: unless-stopped

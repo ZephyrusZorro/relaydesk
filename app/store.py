@@ -121,19 +121,27 @@ class Store:
             db.execute("INSERT INTO audit(ticket_id,action,detail,created_at) VALUES (?,?,?,?)", (ticket_id, "resolved", note, now()))
         return self.get(ticket_id)
 
-    def outbox(self, pending_only=False):
+    def outbox(self, pending_only=False, limit=100):
         with self.connect() as db:
-            query = "SELECT * FROM outbox" + (" WHERE status='pending'" if pending_only else "") + " ORDER BY created_at DESC LIMIT 100"
-            return [dict(r) for r in db.execute(query)]
+            query = "SELECT * FROM outbox" + (" WHERE status='pending' ORDER BY created_at ASC" if pending_only else " ORDER BY created_at DESC")
+            if limit is not None:
+                query += " LIMIT ?"
+            return [dict(r) for r in db.execute(query, () if limit is None else (limit,))]
+
+    def pending_count(self):
+        with self.connect() as db:
+            return db.execute("SELECT COUNT(*) FROM outbox WHERE status='pending'").fetchone()[0]
 
     def handoff(self, event_id, execution_id):
+        newly_delivered = False
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             row = db.execute("SELECT * FROM outbox WHERE id=?", (event_id,)).fetchone()
             if not row:
                 raise Missing("Handoff event not found")
             if row["status"] != "delivered":
+                newly_delivered = True
                 timestamp = now()
                 db.execute("UPDATE outbox SET status='delivered', attempts=attempts+1,execution_id=?,delivered_at=? WHERE id=?", (execution_id, timestamp, event_id))
                 db.execute("INSERT INTO audit(ticket_id,action,detail,created_at) VALUES (?,?,?,?)", (row["ticket_id"], "handoff_delivered", "n8n recorded an internal support handoff; no external message sent", timestamp))
-        return {"event_id": event_id, "status": "delivered"}
+        return {"event_id": event_id, "status": "delivered", "newly_delivered": newly_delivered}

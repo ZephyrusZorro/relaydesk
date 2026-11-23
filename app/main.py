@@ -12,6 +12,7 @@ from .corpus import DOCUMENTS, SAMPLE_REPORTS
 from .knowledge import retrieve
 from .schemas import Report, TicketIn, Approval, Resolution, KnowledgeIn, Query, Receipt
 from .store import Store, Conflict, Missing
+from .security import webhook_envelope
 
 STATIC = Path(__file__).parent / "static"
 
@@ -63,9 +64,12 @@ def create_app(settings=None):
             raise HTTPException(401, "Internal authentication required")
 
     async def n8n(path, body):
+        if not cfg.internal_key:
+            raise HTTPException(503, "n8n authentication is not configured. Run the setup script.")
+        payload, headers = webhook_envelope(body, cfg.internal_key)
         try:
             async with httpx.AsyncClient(timeout=cfg.request_timeout) as client:
-                r = await client.post(cfg.n8n_url + "/webhook/" + path, json=body, headers={"X-Relay-Key": cfg.internal_key})
+                r = await client.post(cfg.n8n_url + "/webhook/" + path, json=payload, headers=headers)
                 r.raise_for_status()
                 result = r.json()
                 if not isinstance(result, dict) or not result:
@@ -84,7 +88,7 @@ def create_app(settings=None):
             except httpx.HTTPError:
                 return False
         n8n_up, ollama_up = await asyncio.gather(check(cfg.n8n_url + "/healthz"), check(cfg.ollama_url + "/api/tags"))
-        return {"status": "ok", "n8n": n8n_up, "ollama": ollama_up, "model": cfg.ollama_model, "retrieval": "LangChain BM25 · lexical", "portal_key_required": bool(cfg.portal_key)}
+        return {"status": "ok", "n8n": n8n_up, "ollama": ollama_up, "model": cfg.ollama_model, "editor_url": cfg.editor_url, "retrieval": "LangChain BM25 · lexical", "portal_key_required": bool(cfg.portal_key)}
 
     @app.get("/healthz")
     def healthz():
@@ -101,6 +105,10 @@ def create_app(settings=None):
     @app.post("/api/reports")
     async def report(body: Report):
         return await n8n("relaydesk-intake", body.model_dump())
+
+    @app.post("/internal/email-report", dependencies=[Depends(internal)])
+    async def email_report(body: Report):
+        return await n8n("relaydesk-intake", {**body.model_dump(), "channel": "email"})
 
     @app.post("/internal/tickets", dependencies=[Depends(internal)])
     def save_ticket(body: TicketIn):
@@ -129,7 +137,7 @@ def create_app(settings=None):
 
     @app.get("/api/outbox")
     def outbox():
-        return {"events": store.outbox()}
+        return {"events": store.outbox(), "pending_count": store.pending_count()}
 
     @app.get("/internal/handoff/pending", dependencies=[Depends(internal)])
     def pending():
@@ -145,7 +153,7 @@ def create_app(settings=None):
 
     @app.get("/api/export")
     def export():
-        return {"project": "RelayDesk", "tickets": [store.get(t["id"]) for t in store.list_tickets()], "outbox": store.outbox(), "knowledge": store.documents()}
+        return {"project": "RelayDesk", "tickets": [store.get(t["id"]) for t in store.list_tickets()], "outbox": store.outbox(limit=None), "knowledge": store.documents()}
 
     @app.get("/")
     def root():

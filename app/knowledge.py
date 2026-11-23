@@ -13,6 +13,7 @@ def tokens(text):
 class ProcedureRetriever(BaseRetriever):
     """Actual LangChain retriever; BM25 lexical relevance, not semantic embeddings."""
     documents: list[Document]
+    category: str | None = None
 
     def _get_relevant_documents(self, query, *, run_manager):
         query_tokens = tokens(query)
@@ -24,6 +25,8 @@ class ProcedureRetriever(BaseRetriever):
         ranked = sorted(enumerate(scores), key=lambda pair: pair[1], reverse=True)
         found = []
         for i, score in ranked:
+            if self.category and self.documents[i].metadata["category"] != self.category:
+                continue
             overlap = set(query_tokens) & set(corpus_tokens[i])
             if score > 0.1 and overlap:
                 doc = self.documents[i]
@@ -40,10 +43,8 @@ def retrieve(documents, query, category=None):
             part = content[max(0, start - 160):start + 1600]
             chunks.append(Document(page_content=part, metadata={k: v for k, v in source.items() if k != "content"} | {"chunk_id": source["id"] if index == 0 else f"{source['id']}:{index + 1}"}))
     # Fetch all matching documents before category filtering, avoiding top-k starvation.
-    retriever = ProcedureRetriever(documents=chunks)
+    retriever = ProcedureRetriever(documents=chunks, category=category)
     matches = retriever.invoke(query)
-    if category and category != "other":
-        matches = [d for d in matches if d.metadata["category"] == category]
     if category == "other":
         matches = []
     return [{"id": d.metadata["chunk_id"], "title": d.metadata["title"], "excerpt": d.page_content,

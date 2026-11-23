@@ -74,7 +74,7 @@ class KnowledgeIn(CleanModel):
 
 
 class Query(CleanModel):
-    query: str = Field(min_length=3, max_length=2000)
+    query: str = Field(min_length=3, max_length=4000)
     category: Category | None = None
 
 
