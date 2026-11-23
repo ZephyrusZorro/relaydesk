@@ -1,0 +1,11 @@
+{
+  "corpus_documents": 5,
+  "indexed_chunks": 5,
+  "cold_index_build_ms": 3.681,
+  "uncached_query_avg_ms": 6.634,
+  "cached_query_avg_ms": 0.9846,
+  "cached_500_queries_total_ms": 494.69,
+  "speedup_factor": 6.7,
+  "cache_hits": 500,
+  "index_builds": 1
+}

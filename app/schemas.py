@@ -73,6 +73,10 @@ class KnowledgeIn(CleanModel):
     trusted: bool = False
 
 
+class KnowledgeTrust(CleanModel):
+    trusted: bool
+
+
 class Query(CleanModel):
     query: str = Field(min_length=3, max_length=4000)
     category: Category | None = None

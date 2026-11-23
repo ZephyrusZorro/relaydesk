@@ -38,6 +38,8 @@ class Store:
                     attempts INTEGER NOT NULL DEFAULT 0, execution_id TEXT NOT NULL DEFAULT '',
                     created_at TEXT NOT NULL, delivered_at TEXT);
                 CREATE TABLE IF NOT EXISTS knowledge (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
+                CREATE TABLE IF NOT EXISTS metadata (name TEXT PRIMARY KEY, value INTEGER NOT NULL);
+                INSERT OR IGNORE INTO metadata VALUES ('knowledge_revision',1);
             """)
 
     @contextmanager
@@ -52,12 +54,52 @@ class Store:
 
     def add_document(self, document):
         with self.connect() as db:
-            db.execute("INSERT OR IGNORE INTO knowledge VALUES (?,?)", (document["id"], json.dumps(document)))
+            result = db.execute("INSERT OR IGNORE INTO knowledge VALUES (?,?)", (document["id"], json.dumps(document)))
+            if result.rowcount:
+                db.execute("UPDATE metadata SET value=value+1 WHERE name='knowledge_revision'")
         return document
+
+    def set_document_trust(self, doc_id, trusted):
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT payload FROM knowledge WHERE id=?", (doc_id,)).fetchone()
+            if not row:
+                raise Missing("Procedure not found")
+            doc = json.loads(row[0])
+            if doc.get("synthetic"):
+                raise Conflict("Built-in demo procedures cannot have their review state changed")
+            doc["trusted"] = bool(trusted)
+            db.execute("UPDATE knowledge SET payload=? WHERE id=?", (json.dumps(doc), doc_id))
+            db.execute("UPDATE metadata SET value=value+1 WHERE name='knowledge_revision'")
+        return doc
+
+    def delete_document(self, doc_id):
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT payload FROM knowledge WHERE id=?", (doc_id,)).fetchone()
+            if not row:
+                raise Missing("Procedure not found")
+            doc = json.loads(row[0])
+            if doc.get("synthetic"):
+                raise Conflict("Built-in demo procedures cannot be deleted")
+            db.execute("DELETE FROM knowledge WHERE id=?", (doc_id,))
+            db.execute("UPDATE metadata SET value=value+1 WHERE name='knowledge_revision'")
+        return {"deleted": doc_id}
 
     def documents(self):
         with self.connect() as db:
             return [json.loads(row[0]) for row in db.execute("SELECT payload FROM knowledge ORDER BY id")]
+
+    def knowledge_snapshot(self):
+        with self.connect() as db:
+            db.execute("BEGIN")
+            revision = db.execute("SELECT value FROM metadata WHERE name='knowledge_revision'").fetchone()[0]
+            docs = [json.loads(row[0]) for row in db.execute("SELECT payload FROM knowledge ORDER BY id")]
+            return revision, docs
+
+    def knowledge_revision(self):
+        with self.connect() as db:
+            return db.execute("SELECT value FROM metadata WHERE name='knowledge_revision'").fetchone()[0]
 
     def _unpack(self, row):
         return {**json.loads(row["payload"]), **{k: row[k] for k in ("id", "status", "version", "created_at", "updated_at")}}

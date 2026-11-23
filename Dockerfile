@@ -6,6 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 UV_COMPILE_BYTECODE=1
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev
 COPY app ./app
+COPY workflows ./workflows
 RUN useradd --create-home --uid 10001 relaydesk && mkdir /data && chown relaydesk:relaydesk /data
 USER relaydesk
 EXPOSE 8000

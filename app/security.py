@@ -7,7 +7,7 @@ import jwt
 SECRET_PATTERN = re.compile(r'''\b(password|passcode|recovery code|access token|token)\s*(?:is|=|:)\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|\S+)''', re.I)
 
 
-def webhook_envelope(body, key):
+def sanitize_fields(body):
     payload = dict(body)
     for field in ("text", "location", "requester"):
         if field not in payload:
@@ -16,6 +16,11 @@ def webhook_envelope(body, key):
         payload[field] = SECRET_PATTERN.sub(lambda match: match.group(0)[:-len(match.group(2))] + "*" * len(match.group(2)), original)
         if payload[field] != original:
             payload["input_redacted"] = True
+    return payload
+
+
+def webhook_envelope(body, key):
+    payload = sanitize_fields(body)
     issued = int(time.time())
     token = jwt.encode({"sub": "relaydesk-service", "iat": issued, "exp": issued + 30, "jti": uuid4().hex}, key, algorithm="HS256")
     return payload, {"Authorization": "Bearer " + token}

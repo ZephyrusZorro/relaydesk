@@ -1,6 +1,6 @@
 [project]
 name = "relaydesk"
-version = "1.0.0"
+version = "2.0.0"
 description = "n8n-first voice support operations with evidence-backed specialist agents"
 requires-python = ">=3.12,<3.14"
 dependencies = [

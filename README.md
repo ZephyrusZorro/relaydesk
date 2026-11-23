@@ -1,8 +1,8 @@
-# RelayDesk
+# RelayDesk 2.0
 
-**A voice-enabled IT support workbench, orchestrated in n8n.**
+**A voice-enabled IT support operations workbench, orchestrated in n8n with a durable background worker and cached hybrid lexical RAG.**
 
-Employees describe an issue in the browser. Three specialist AI agents classify it, retrieve procedures, draft a sourced response and review it. An operator inspects the evidence, edits the response and approves an internal handoff. The queue, sources, agent summaries and approval history remain inspectable.
+Employees describe an issue by typing or dictating in the browser. Requests enter a durable SQLite job queue, are dispatched by an independent Docker worker with lease recovery and bounded retries, and flow through three native n8n specialist AI agents (classifier, resolver, reviewer) that report live stages back to the console. An operator inspects the evidence, agent trail and job timeline, edits the response and approves an atomic internal handoff. The queue, sources, review status, agent summaries and approval history remain inspectable.
 
 This is an original capstone with a built-in browser portal. It needs no Telegram or messaging account. The optional email workflow is disabled until you configure a mailbox.
 
@@ -24,7 +24,7 @@ On macOS/Linux:
 sh scripts/start.sh
 ```
 
-Open the [support portal](http://localhost:18080) and [n8n editor](http://localhost:15678). Create your own n8n owner account on first opening the editor. The setup script imports and publishes the two core workflows before startup; the portal does not require an n8n editor login.
+Open the [support portal](http://localhost:18080) and [n8n editor](http://localhost:15678). Create your own n8n owner account on first opening the editor. The setup script imports and publishes the three core workflows (intake, handoff, and connection probe) before startup; the portal does not require an n8n editor login.
 
 The launcher creates an ignored `.env` with random local keys, imports credentials without printing them, builds the service and checks container health. Re-running it preserves existing workflow edits and optional email configuration. A persistent marker resumes an interrupted first import/publication. It never resets your volumes.
 
@@ -32,12 +32,12 @@ If ports are occupied, edit `RELAYDESK_PORT` and `RELAYDESK_N8N_PORT` in `.env`,
 
 ## Try the complete journey
 
-1. Choose **New request**, enter your location, select **VPN drops**, and use **Demo** mode.
-2. Open **Evidence** to read the retrieved procedure and **Agent trail** to inspect the actual workflow stages. Demo mode is deterministic and does not call an LLM.
+1. Choose **New request**, enter your location, select **VPN drops**, and use **Demo** mode (or **Local LLM** when Ollama is ready).
+2. Watch the live durable job stages reported from n8n, then open **Evidence** to read the retrieved procedure and **Agent trail** to inspect the actual workflow stages. Demo mode is deterministic and does not call an LLM.
 3. Review or edit the answer, then select **Approve response**.
-4. In **Automations**, select **Run pending handoffs**. n8n records one internal receipt. No external email, chat message or privileged IT action is sent.
+4. In **Workflows**, inspect the live n8n handshake, click **Timeline** on any background job to view its event log, and select **Run handoffs**. n8n records one internal receipt. No external email, chat message or privileged IT action is sent.
 5. Reopen the approved request, add a resolution note and select **Mark resolved**.
-6. In **Knowledge**, search for a procedure or add one. Custom sources are unreviewed by default; explicitly review a procedure before marking it trusted.
+6. In **Knowledge**, run a query in the **Retrieval Playground** (with service filter and live cache diagnostics) or add a custom procedure. Custom sources are unreviewed by default; use **Mark reviewed** / **Mark unreviewed** or **Remove** directly on custom procedure cards to manage trust and automatically invalidate the retrieval cache.
 
 The four seeded requests are visibly labeled sample fixtures. Submitting a new request executes n8n. Try an unsupported question to see abstention, or omit a location through the API to see blocked handoff.
 
@@ -66,24 +66,26 @@ Change `RELAYDESK_OLLAMA_MODEL` to another compatible tool-capable model if desi
 
 | Technology | Concrete implementation |
 |---|---|
-| n8n automation | Main intake/agent canvas, approved handoff canvas and optional email intake |
+| n8n automation | Main intake/agent canvas, approved handoff canvas, authenticated website connection probe, and optional email intake |
 | Multi-agent system | Native n8n classifier, resolver and reviewer AI Agent nodes, each with a read-only procedure tool and its own model connection |
-| LangChain | n8n's native LangChain agents/Ollama nodes; Python BaseRetriever and Document objects |
-| RAG | BM25 retrieval over chunked procedures, source IDs/excerpts, structured citations and no-evidence abstention |
+| Durable job queue | SQLite-backed job queue with independent Docker worker, worker heartbeats, lease expiration recovery, exponential backoff and live n8n stage callbacks |
+| LangChain | n8n's native LangChain agents/Ollama nodes; Python `BaseRetriever` and `Document` objects |
+| RAG | Versioned, cached hybrid lexical retrieval (BM25 + character 3-gram similarity via Reciprocal Rank Fusion), source IDs/excerpts, structured citations, automatic cache invalidation on knowledge edits, and no-evidence abstention |
 | LLM | Local Ollama model in Live mode; real model execution verified |
-| Docker | n8n and data/portal containers, persistent volumes, health checks, optional Ollama container |
+| Docker | `desk`, `worker`, and `n8n` containers, persistent volumes, health checks, optional Ollama container |
 | Text to speech | **Read aloud** in a ticket response, using the browser/OS voice engine |
 | Speech to text | Optional **Dictate request**, feature-detected Web Speech recognition |
 | Messaging alternative | Built-in web/voice portal; optional IMAP email intake, no Telegram |
-| Human review | Editable responses, version-checked approval, durable outbox and audit history |
+| Human review | Editable responses, version-checked approval, durable outbox, custom procedure review/removal, and audit history |
 
 Retrieval is deliberately lexical; no embeddings, vector database or semantic-search quality is claimed. These are bounded specialist agents in a workflow, not an unconstrained autonomous IT administrator.
 
 ## Open and edit the n8n workflows
 
-- [`workflows/01-intake.json`](workflows/01-intake.json): authenticated webhook → classification → retrieval → resolution → review → guard → ticket.
+- [`workflows/01-intake.json`](workflows/01-intake.json): authenticated webhook → classification → retrieval → resolution → review → guard → ticket, with stage progress callbacks.
 - [`workflows/02-handoff.json`](workflows/02-handoff.json): approved outbox → idempotent internal receipts.
 - [`workflows/03-email-optional.json`](workflows/03-email-optional.json): IMAP batch → normalized requests → same core pipeline. Disabled initially.
+- [`workflows/04-status.json`](workflows/04-status.json): authenticated website-to-n8n connection handshake probe.
 
 Edit directly in n8n; normal startup preserves those edits. To intentionally replace the **core** workflows with the tracked source versions:
 
@@ -113,11 +115,12 @@ Create `.cache` first if it does not exist. The explicit test temp directory avo
 With the Docker stack running, these checks create synthetic tickets and handoffs:
 
 ```sh
+uv run python scripts/v2-smoke.py --live
 uv run python scripts/smoke.py --live
 uv run python scripts/verify-boundaries.py
 ```
 
-Results, exact scope and limitations: [verification](docs/VERIFICATION.md), [evaluation](docs/EVALUATION.md), [machine-readable results](docs/evaluation-results.json), [boundary checks](docs/boundary-results.json).
+Results, exact scope and limitations: [verification](docs/VERIFICATION.md), [evaluation](docs/EVALUATION.md), [v2 plan](docs/V2-PLAN.md), [v2 integration results](docs/v2-integration-results.json), [v2 retrieval benchmark](docs/v2-benchmark.json), [machine-readable results](docs/evaluation-results.json), [boundary checks](docs/boundary-results.json).
 
 ## Data and access
 
@@ -136,7 +139,7 @@ docker compose stop
 Resume it without reimporting or rebuilding:
 
 ```sh
-docker compose up -d --wait desk n8n
+docker compose up -d --wait desk n8n worker
 ```
 
 ## Handover material

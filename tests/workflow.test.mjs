@@ -279,6 +279,7 @@ test("workflow execution persistence cannot retain inbound credentials and raw r
     "01-intake.json",
     "02-handoff.json",
     "03-email-optional.json",
+    "04-status.json",
   ]) {
     const flow = JSON.parse(
       fs.readFileSync(new URL("../workflows/" + file, import.meta.url)),
@@ -297,7 +298,7 @@ test('redaction covers metadata and does not expand a maximum-length report',()=
 });
 
 test('bootstrap resumes a pending publication without resetting ordinary existing flows',()=>{
-  const existing=['RelayDeskIntake01','RelayDeskHandoff1','RelayDeskEmail01'];
+  const existing=['RelayDeskIntake01','RelayDeskHandoff1','RelayDeskEmail01','RelayDeskStatus01'];
   assert.equal(bootstrapPlan(existing).length,0);
   const pending=bootstrapPlan(existing,false,['RelayDeskIntake01']);
   assert.deepEqual(pending.map(flow=>flow.id),['RelayDeskIntake01']);

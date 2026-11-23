@@ -9,8 +9,11 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import Settings
 from .corpus import DOCUMENTS, SAMPLE_REPORTS
-from .knowledge import retrieve
-from .schemas import Report, TicketIn, Approval, Resolution, KnowledgeIn, Query, Receipt
+from .retrieval import KnowledgeIndex
+from .jobs import JobQueue
+from .operations import Operations
+from .transport import invoke_n8n
+from .schemas import Report, TicketIn, Approval, Resolution, KnowledgeIn, KnowledgeTrust, Query, Receipt
 from .store import Store, Conflict, Missing
 from .security import webhook_envelope
 
@@ -32,8 +35,13 @@ def create_app(settings=None):
                 "flags": [], "grounded": True, "automation_allowed": True, "execution_id": "",
                 "trace": [{"name": "Sample fixture", "kind": "sample", "detail": "Seeded example for exploring the interface. Submit a new request to execute n8n."}]})
 
-    app = FastAPI(title="RelayDesk data and retrieval service", version="1.0.0")
+    queue = JobQueue(store)
+    index = KnowledgeIndex(store)
+    operations = Operations(cfg, queue, index)
+    app = FastAPI(title="RelayDesk operations service", version="2.0.0")
     app.state.store, app.state.settings = store, cfg
+    app.state.queue = queue
+    app.state.index = index
 
     @app.middleware("http")
     async def local_boundaries(request: Request, call_next):
@@ -66,29 +74,39 @@ def create_app(settings=None):
     async def n8n(path, body):
         if not cfg.internal_key:
             raise HTTPException(503, "n8n authentication is not configured. Run the setup script.")
-        payload, headers = webhook_envelope(body, cfg.internal_key)
         try:
-            async with httpx.AsyncClient(timeout=cfg.request_timeout) as client:
-                r = await client.post(cfg.n8n_url + "/webhook/" + path, json=payload, headers=headers)
-                r.raise_for_status()
-                result = r.json()
-                if not isinstance(result, dict) or not result:
-                    raise ValueError("Empty workflow response")
-                return result
-        except (httpx.HTTPError, ValueError):
+            return await invoke_n8n(cfg, path, body)
+        except (httpx.HTTPError, ValueError, RuntimeError):
             raise HTTPException(503, "n8n workflow unavailable or failed. Check workflow activation and execution history; retry with the same request ID.")
 
     @app.get("/api/health")
     async def health():
-        async def check(url):
-            try:
-                async with httpx.AsyncClient(timeout=2) as client:
-                    r = await client.get(url)
-                    return r.status_code == 200
-            except httpx.HTTPError:
-                return False
-        n8n_up, ollama_up = await asyncio.gather(check(cfg.n8n_url + "/healthz"), check(cfg.ollama_url + "/api/tags"))
-        return {"status": "ok", "n8n": n8n_up, "ollama": ollama_up, "model": cfg.ollama_model, "editor_url": cfg.editor_url, "retrieval": "LangChain BM25 · lexical", "portal_key_required": bool(cfg.portal_key)}
+        return await operations.snapshot()
+
+    @app.post("/api/integrations/check")
+    async def check_integrations():
+        return await operations.snapshot(force=True)
+
+    @app.post("/api/jobs", status_code=202)
+    def enqueue_report(body: Report):
+        return queue.enqueue(body.model_dump())
+
+    @app.get("/api/jobs")
+    def jobs():
+        return {"jobs": queue.list(), "metrics": queue.metrics()}
+
+    @app.get("/api/jobs/{job_id}")
+    def job(job_id: str):
+        return queue.get(job_id)
+
+    @app.post("/api/jobs/{job_id}/retry")
+    def retry_job(job_id: str):
+        return queue.retry(job_id)
+
+    @app.post("/internal/jobs/progress", dependencies=[Depends(internal)])
+    def progress(body: dict):
+        queue.progress(str(body.get("request_id", "")), str(body.get("stage", "")), str(body.get("execution_id", "")), body.get("run_token"))
+        return body.get("context", {})
 
     @app.get("/healthz")
     def healthz():
@@ -130,10 +148,18 @@ def create_app(settings=None):
     def add_knowledge(body: KnowledgeIn):
         return store.add_document({"id": "KB-CUSTOM-" + uuid4().hex[:8].upper(), **body.model_dump(), "synthetic": False, "steps": []})
 
+    @app.patch("/api/knowledge/{doc_id}")
+    def update_knowledge_trust(doc_id: str, body: KnowledgeTrust):
+        return store.set_document_trust(doc_id, body.trusted)
+
+    @app.delete("/api/knowledge/{doc_id}")
+    def remove_knowledge(doc_id: str):
+        return store.delete_document(doc_id)
+
     @app.post("/api/knowledge/search")
     @app.post("/internal/retrieve", dependencies=[Depends(internal)])
     def search(body: Query):
-        return {"citations": retrieve(store.documents(), body.query, body.category), "retrieval": "BM25 lexical retrieval via LangChain"}
+        return index.search(body.query, body.category)
 
     @app.get("/api/outbox")
     def outbox():

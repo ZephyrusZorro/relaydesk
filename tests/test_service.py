@@ -131,7 +131,31 @@ def test_optional_portal_key_protects_records(tmp_path):
 def test_portal_and_assets_are_served(client):
     assert client.get("/").status_code == 200
     assert client.get("/static/app.js").status_code == 200
-    assert client.get("/static/styles.css").status_code == 200
+    assert client.get("/static/v2.css").status_code == 200
+    assert client.get("/static/mark.svg").status_code == 200
+
+
+def test_knowledge_review_and_deletion_invalidate_retrieval_cache(client):
+    created = client.post("/api/knowledge", json={"title": "Badge reader reset", "category": "device", "content": "When the lobby badge reader flashes amber, unplug the USB dock cable and wait ten seconds before reconnecting."})
+    assert created.status_code == 200
+    doc_id = created.json()["id"]
+    first = client.post("/api/knowledge/search", json={"query": "lobby badge reader flashes amber", "category": "device"}).json()
+    assert first["citations"][0]["id"] == doc_id and first["citations"][0]["trusted"] is False
+    rev_before = first["diagnostics"]["index_revision"]
+
+    reviewed = client.patch(f"/api/knowledge/{doc_id}", json={"trusted": True})
+    assert reviewed.status_code == 200 and reviewed.json()["trusted"] is True
+    second = client.post("/api/knowledge/search", json={"query": "lobby badge reader flashes amber", "category": "device"}).json()
+    assert second["diagnostics"]["cache_hit"] is False
+    assert second["diagnostics"]["index_revision"] == rev_before + 1
+    assert second["citations"][0]["trusted"] is True
+
+    assert client.patch("/api/knowledge/KB-VPN-01", json={"trusted": False}).status_code == 409
+    assert client.delete("/api/knowledge/KB-VPN-01").status_code == 409
+    assert client.delete(f"/api/knowledge/{doc_id}").status_code == 200
+    after_delete = client.post("/api/knowledge/search", json={"query": "lobby badge reader flashes amber", "category": "device"}).json()
+    assert all(c["id"] != doc_id for c in after_delete["citations"])
+    assert client.delete(f"/api/knowledge/{doc_id}").status_code == 404
 
 
 def test_retrieval_accepts_full_length_report(client):

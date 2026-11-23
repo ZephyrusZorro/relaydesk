@@ -2,15 +2,18 @@
 
 ```mermaid
 flowchart LR
-  User[Browser text or speech] --> Portal[RelayDesk portal / API proxy]
-  Portal --> Hook[n8n authenticated intake webhook]
+  User[Browser text or speech] --> Portal[RelayDesk portal / Jobs API]
+  Portal --> Queue[(SQLite durable job queue)]
+  Queue --> Worker[Independent Docker worker]
+  Worker --> Hook[n8n authenticated intake webhook]
+  Portal -.-> Probe[n8n status handshake webhook]
   Hook --> Validate[Validate and redact]
   Validate --> Mode{Demo or Live}
   Mode -->|Live| Classifier[Classifier AI Agent]
   Mode -->|Demo| Rules[Bounded routing rules]
   Classifier --> Retrieve[Retrieve procedure chunks]
   Rules --> Retrieve
-  Retrieve --> RAG[LangChain BM25 service]
+  Retrieve --> RAG[Cached LangChain hybrid lexical index]
   RAG --> Knowledge[(Procedure library)]
   Retrieve --> Resolver[Resolution AI Agent or extractive demo]
   Resolver --> Reviewer[Reviewer AI Agent]
@@ -31,10 +34,11 @@ The diagram shows the Live path. Demo mode skips the model stages and constructs
 
 | Component | Owns | Does not own |
 |---|---|---|
-| `01-intake.json` | Branching, three specialist agents, tool connections, retrieval ordering, draft validation, guard and persistence call | User identity or privileged IT actions |
+| `01-intake.json` | Branching, three specialist agents, tool connections, retrieval ordering, live stage progress callbacks, draft validation, guard and persistence call | User identity or privileged IT actions |
 | `02-handoff.json` | Reading approved pending events and recording idempotent receipts | Unapproved decisions or external notification by default |
 | `03-email-optional.json` | Optional IMAP email-to-request conversion and core workflow invocation | Sender identity verification, approval or outbound email |
-| Python sidecar | API contracts, LangChain BM25 retrieval, SQLite transactions and static portal | Specialist model calls or hidden fallback orchestration |
+| `04-status.json` | Authenticated website-to-n8n connection handshake verification | Implying publication state of other workflows |
+| Python service + worker | API contracts, durable SQLite job queue with leased worker recovery, versioned cached LangChain hybrid lexical retrieval, SQLite transactions, knowledge review governance and static portal | Specialist model calls or hidden fallback orchestration |
 | Browser | Text/speech intake, evidence inspection, response editing, explicit approval | Silent approval or action on behalf of a resident/employee |
 
 ## Specialist agents
@@ -45,7 +49,7 @@ These are constrained specialists arranged in a workflow. They do not independen
 
 ## Retrieval
 
-Procedure text is chunked with a 160-character overlap and ranked with BM25 using a LangChain `BaseRetriever` and `Document` objects. Category filtering narrows support scope. Returned sources include stable IDs, titles, excerpts, review status, demo provenance and a lexical score. This is lexical RAG; no semantic embeddings or vector database are claimed. A future extension can compare embeddings against this measurable baseline.
+Procedure text is chunked with a 160-character overlap and ranked by a versioned, cached hybrid lexical LangChain `BaseRetriever` combining `BM25Okapi` with character 3-gram cosine similarity via Reciprocal Rank Fusion (RRF), plus bounded domain synonym expansion. Category filtering narrows support scope. Any knowledge addition, review-trust update, or deletion atomically increments `knowledge_revision`, invalidating both the index and the 128-entry LRU query cache. Returned sources include stable IDs, titles, excerpts, review status, demo provenance, lexical rank score and measured search diagnostics. This is lexical RAG; no semantic embeddings or vector database are claimed. A future extension can compare embeddings against this measurable baseline.
 
 ## Approval and delivery semantics
 

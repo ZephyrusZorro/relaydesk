@@ -6,14 +6,14 @@ Verified locally on 23 November 2026. See `BUILD_LOG.md` for stage decisions and
 
 | Layer | Verification | Scope |
 |---|---|---|
-| Python service | 20 passing pytest tests | Persistence, retrieval, request bounds, internal/portal authentication, cross-origin writes, request deduplication, approval versions, outbox integrity, receipts, full history export and signed/redacted ingress |
-| Workflow logic | 19 passing Node tests | Routing, abstention, invalid citations, JSON fallback, untrusted sources, redaction, hazard boundary, summary validation, email batching, known-reference formatting, native agent connections and interrupted-bootstrap recovery |
-| Docker | Compose configuration, image build and health checks | n8n 2.48.7 and data/portal service on loopback ports |
-| Real n8n integration | Ten demo cases, lifecycle and boundary scripts | Actual published webhooks and HTTP calls, not mocked orchestration |
-| Local LLM | One recorded normal-support run with three model stages | Host Ollama 0.40.17, model llama3.2:3b; no fallback flags in final run |
+| Python service | 29 passing pytest tests (86% coverage) | Persistence, durable SQLite job queue, concurrent claims, lease expiry audit events, retry bounds, versioned cached hybrid lexical retrieval, custom procedure trust review & deletion with cache invalidation, request bounds, internal/portal authentication, cross-origin writes, request deduplication, approval versions, outbox integrity, receipts, full history export and signed/redacted ingress |
+| Workflow logic | 19 passing Node tests | Routing, abstention, invalid citations, JSON fallback, untrusted sources, redaction, hazard boundary, summary validation, email batching, known-reference formatting, native agent connections, all 4 workflow persistence checks and interrupted-bootstrap recovery |
+| Docker | Compose configuration, image build and health checks | `desk`, independent `worker`, and `n8n` 2.48.7 services on loopback ports |
+| Real n8n v2 integration | `scripts/v2-smoke.py --live` & `scripts/verify-boundaries.py` | Authenticated website-to-n8n handshake (`RelayDeskStatus01`), durable worker → n8n Demo (~1.0 s) and Local LLM (~6.6 s) end-to-end runs with all live stage callbacks, retrieval cache hit verification, 4000-char/secret/hazard/expired-JWT/concurrent-handoff boundaries |
+| Local LLM | Real 3-agent local execution verified via durable worker | Host Ollama 0.40.17, model `llama3.2:3b`; classifier, resolver and reviewer completed with zero fallback flags |
 | Trigger-data inspection | Direct read of this project's n8n SQLite data | Confirmed no reusable service key or original synthetic password in the final retained trigger payload |
 
-Coverage is a service-code measure, not agent-answer quality. The recorded service coverage run including the signed ingress module was 91%; the final additional regression verifies punctuation, metadata and length preservation in redaction. No blanket coverage claim is made for the JavaScript UI.
+Coverage is a service-code measure, not agent-answer quality. The v2 Python service coverage run is 86% across 12 modules (`tests/test_jobs.py` + `tests/test_service.py`). Retrieval benchmark (`docs/v2-benchmark.json`) measured a 6.7× query speedup with the versioned cache (0.98 ms cached vs 6.63 ms uncached). No blanket coverage claim is made for the JavaScript UI.
 
 ## Browser checks
 

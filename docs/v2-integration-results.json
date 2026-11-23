@@ -1,0 +1,55 @@
+{
+  "authenticated_n8n_handshake": {
+    "status": "connected",
+    "orchestrator": "n8n",
+    "workflow_id": "RelayDeskStatus01",
+    "execution_id": "847",
+    "checked_at": "2026-11-23T10:15:33.751Z",
+    "model": "llama3.2:3b",
+    "protocol": "relaydesk-v2"
+  },
+  "worker_verified": true,
+  "configured_workflows": 4,
+  "jobs": [
+    {
+      "mode": "demo",
+      "job_id": "JOB-77384739CE0A",
+      "ticket_id": "RD-937A71CD",
+      "accept_ms": 10.4,
+      "total_seconds": 1.03,
+      "mode_used": "demo",
+      "flags": [],
+      "stages": [
+        "queued",
+        "dispatching",
+        "classifying",
+        "retrieving",
+        "drafting",
+        "persisting",
+        "completed"
+      ],
+      "n8n_execution_id": "848"
+    },
+    {
+      "mode": "live",
+      "job_id": "JOB-CAA8DEDEF7FC",
+      "ticket_id": "RD-369DDF9A",
+      "accept_ms": 14.19,
+      "total_seconds": 6.59,
+      "mode_used": "live",
+      "flags": [],
+      "stages": [
+        "queued",
+        "dispatching",
+        "classifying",
+        "retrieving",
+        "drafting",
+        "reviewing",
+        "persisting",
+        "completed"
+      ],
+      "n8n_execution_id": "849"
+    }
+  ],
+  "retrieval_cache_verified": true
+}

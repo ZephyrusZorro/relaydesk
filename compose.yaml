@@ -27,6 +27,24 @@ services:
       timeout: 5s
       retries: 12
 
+  worker:
+    image: relaydesk-desk
+    command: ["/srv/relaydesk/.venv/bin/python", "-m", "app.worker"]
+    restart: unless-stopped
+    environment:
+      RELAYDESK_DB_PATH: /data/relaydesk.db
+      RELAYDESK_INTERNAL_KEY: ${RELAYDESK_INTERNAL_KEY}
+      RELAYDESK_N8N_URL: http://n8n:5678
+    volumes: ["desk_data:/data"]
+    depends_on:
+      desk: {condition: service_healthy}
+      n8n: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "/srv/relaydesk/.venv/bin/python", "-m", "app.worker", "--health"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
   n8n:
     image: docker.n8n.io/n8nio/n8n:2.48.7
     restart: unless-stopped

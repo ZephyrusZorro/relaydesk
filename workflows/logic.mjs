@@ -51,6 +51,7 @@ export function normalize(raw) {
     location,
     requester,
     request_id: String(raw.request_id || "").slice(0, 120),
+    job_token: String(raw.job_token || ""),
     mode: raw.mode === "live" ? "live" : "demo",
     channel: ["portal", "email", "webhook"].includes(raw.channel)
       ? raw.channel

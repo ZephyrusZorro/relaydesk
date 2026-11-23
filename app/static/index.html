@@ -1,354 +1,49 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#0c111b" />
-    <meta
-      name="description"
-      content="RelayDesk — evidence-backed IT support, orchestrated in n8n."
-    />
-    <title>RelayDesk · Support operations</title>
-    <link rel="icon" href="/static/mark.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/static/styles.css" />
-    <script type="module" src="/static/app.js"></script>
-  </head>
-  <body>
-    <a class="skip" href="#main">Skip to content</a>
-    <aside class="sidebar">
-      <a class="brand" href="#overview"
-        ><img src="/static/mark.svg" alt="" width="36" height="36" /><span
-          >relaydesk<span class="brand-dot">.</span></span
-        ></a
-      >
-      <div class="workspace">
-        <span class="workspace-icon">R</span>
-        <div>Relay workspace<small>Local support operations</small></div>
-        <span class="local-tag">LOCAL</span>
-      </div>
-      <p class="nav-label">WORKSPACE</p>
-      <nav aria-label="Main navigation">
-        <button data-view="overview" class="nav-item active">
-          <span data-icon="grid"></span>Overview
-        </button>
-        <button data-view="queue" class="nav-item">
-          <span data-icon="inbox"></span>Request queue<span
-            id="nav-count"
-            class="nav-count"
-            >0</span
-          >
-        </button>
-        <button data-view="knowledge" class="nav-item">
-          <span data-icon="book"></span>Knowledge
-        </button>
-        <button data-view="automations" class="nav-item">
-          <span data-icon="workflow"></span>Automations
-        </button>
-      </nav>
-      <div class="sidebar-bottom">
-        <div class="engine-card">
-          <span class="tiny-kicker">ORCHESTRATION ENGINE</span>
-          <div>
-            <span class="n8n-symbol">⌘</span><strong>Built around n8n</strong>
-          </div>
-          <p>Three specialists. Visible sources.<br />One human decision.</p>
-          <a
-            id="canvas-link"
-            href="http://localhost:15678"
-            target="_blank"
-            rel="noopener"
-            >Open workflow editor<span data-icon="external"></span
-          ></a>
-        </div>
-        <button id="about-button" class="operator">
-          <span class="avatar">OP</span>
-          <div>Support operator<small>Single-user demo workspace</small></div>
-          <span data-icon="help"></span>
-        </button>
-      </div>
-    </aside>
-    <div class="shell">
-      <header class="topbar">
-        <div class="breadcrumbs">
-          Workspace<span>/</span><strong id="breadcrumb">Overview</strong>
-        </div>
-        <div class="top-actions">
-          <span id="engine-status" class="engine-status">Checking n8n</span
-          ><button
-            class="icon-button"
-            id="refresh-button"
-            aria-label="Refresh workspace"
-            title="Refresh workspace"
-          >
-            <span data-icon="refresh"></span></button
-          ><button class="button primary" id="new-button">
-            <span data-icon="plus"></span>New request
-          </button>
-        </div>
-      </header>
-      <main id="main" tabindex="-1">
-        <div id="connection-banner" class="banner" hidden></div>
-        <section id="overview-view" class="view">
-          <div class="page-heading">
-            <div>
-              <p class="eyebrow">SUPPORT OPERATIONS</p>
-              <h1>Every request. A clear next step.</h1>
-              <p class="subtitle">
-                Turn scattered IT issues into reviewed, evidence-backed
-                responses.
-              </p>
-            </div>
-            <span class="date-label" id="today-label"></span>
-          </div>
-          <div class="stats" id="stats"></div>
-          <div class="overview-grid">
-            <section class="panel queue-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Needs your attention</h2>
-                  <p>Drafted by the workflow. Decided by you.</p>
-                </div>
-                <button class="text-button" data-goto="queue">
-                  View all requests <span data-icon="chevron"></span>
-                </button>
-              </div>
-              <div id="attention-list" class="request-list"></div>
-            </section>
-            <section class="panel workflow-panel">
-              <div class="panel-heading">
-                <div>
-                  <div class="inline-heading">
-                    <h2>The path to resolution</h2>
-                    <span class="tag violet">n8n</span>
-                  </div>
-                  <p>A workflow you can inspect at every step.</p>
-                </div>
-              </div>
-              <div class="pipeline" id="pipeline"></div>
-              <div class="human-gate">
-                <span data-icon="shield"></span>
-                <div>
-                  <strong>You make the final call</strong>
-                  <p>No handoff happens before operator approval.</p>
-                </div>
-              </div>
-            </section>
-            <section class="panel mix-panel">
-              <div class="panel-heading">
-                <div>
-                  <h2>Requests by service</h2>
-                  <p>Your current workspace, by category.</p>
-                </div>
-                <span data-icon="chart"></span>
-              </div>
-              <div id="service-mix"></div>
-            </section>
-            <section class="evidence-feature">
-              <span class="tag mint">RETRIEVAL, WITH RECEIPTS</span>
-              <h2>Answers that show<br />their working.</h2>
-              <p>
-                Open the source behind a draft. Inspect the specialist trail.
-                Approve with context.
-              </p>
-              <button class="button secondary" data-goto="knowledge">
-                Explore the knowledge library <span data-icon="book"></span>
-              </button>
-              <div class="source-decoration" aria-hidden="true">
-                <span>KB-VPN-01</span>
-                <div></div>
-                <div></div>
-                <div></div>
-                <b>Source attached</b>
-              </div>
-            </section>
-          </div>
-        </section>
-        <section id="queue-view" class="view" hidden>
-          <div class="page-heading">
-            <div>
-              <p class="eyebrow">REQUEST QUEUE</p>
-              <h1>Keep support moving.</h1>
-              <p class="subtitle">
-                Inspect the evidence, refine the response and choose the next
-                step.
-              </p>
-            </div>
-            <button class="button secondary" id="export-button">
-              <span data-icon="download"></span>Export workspace
-            </button>
-          </div>
-          <div class="panel">
-            <div class="filters">
-              <label class="search-box"
-                ><span data-icon="search"></span
-                ><input
-                  id="queue-search"
-                  placeholder="Search requests, people or locations"
-                  aria-label="Search requests" /></label
-              ><select id="status-filter" aria-label="Filter by status">
-                <option value="">All statuses</option>
-                <option value="needs_review">Needs review</option>
-                <option value="approved">Approved</option>
-                <option value="resolved">Resolved</option></select
-              ><select id="category-filter" aria-label="Filter by service">
-                <option value="">All services</option>
-                <option value="network">Network</option>
-                <option value="vpn">VPN</option>
-                <option value="account">Account</option>
-                <option value="software">Software</option>
-                <option value="device">Device</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div id="queue-table"></div>
-          </div>
-        </section>
-        <section id="knowledge-view" class="view" hidden>
-          <div class="page-heading">
-            <div>
-              <p class="eyebrow">KNOWLEDGE LIBRARY</p>
-              <h1>Better context. Better support.</h1>
-              <p class="subtitle">
-                A small, inspectable procedure library powers every grounded
-                response.
-              </p>
-            </div>
-            <button class="button secondary" id="add-knowledge-button">
-              <span data-icon="plus"></span>Add procedure
-            </button>
-          </div>
-          <div class="notice">
-            <span data-icon="info"></span>
-            <p>
-              The included procedures are fictional demo material. Replace them
-              with reviewed internal guidance before real use. Retrieval uses
-              BM25 lexical matching through LangChain.
-            </p>
-          </div>
-          <form id="knowledge-search-form" class="panel retrieval-playground">
-            <div>
-              <h2>Test the retrieval</h2>
-              <p>See which source chunks a question brings back.</p>
-            </div>
-            <label class="search-box"
-              ><span data-icon="search"></span
-              ><input
-                id="knowledge-query"
-                minlength="3"
-                maxlength="2000"
-                placeholder="e.g. VPN tunnel keeps disconnecting"
-                aria-label="Retrieval question"
-                required /></label
-            ><button class="button primary" type="submit">Find evidence</button>
-          </form>
-          <div id="retrieval-results" aria-live="polite"></div>
-          <div class="section-heading">
-            <h2>Procedure library</h2>
-            <span id="document-count" class="muted"></span>
-          </div>
-          <div id="knowledge-grid" class="knowledge-grid"></div>
-        </section>
-        <section id="automations-view" class="view" hidden>
-          <div class="page-heading">
-            <div>
-              <p class="eyebrow">AUTOMATIONS</p>
-              <h1>Approved first. Automated next.</h1>
-              <p class="subtitle">
-                A durable outbox connects your decisions to the n8n handoff
-                workflow.
-              </p>
-            </div>
-            <button class="button primary" id="run-handoff">
-              <span data-icon="play"></span>Run pending handoffs
-            </button>
-          </div>
-          <div class="automation-cards">
-            <article class="panel automation-card">
-              <span class="automation-icon violet"
-                ><span data-icon="workflow"></span
-              ></span>
-              <h2>Intake & specialist agents</h2>
-              <p>
-                Validate, classify, retrieve, draft and review. Every new
-                request runs through this n8n canvas.
-              </p>
-              <span class="tag mint">Core workflow</span
-              ><a
-                class="workflow-link"
-                href="http://localhost:15678/workflow/RelayDeskIntake01"
-                target="_blank"
-                rel="noopener"
-                >Inspect in n8n <span data-icon="external"></span
-              ></a>
-            </article>
-            <article class="panel automation-card">
-              <span class="automation-icon mint"
-                ><span data-icon="shield"></span
-              ></span>
-              <h2>Approved support handoff</h2>
-              <p>
-                Reads pending approved events and records idempotent receipts.
-                Retries do not duplicate local handoffs.
-              </p>
-              <span class="tag mint">Core workflow</span
-              ><a
-                class="workflow-link"
-                href="http://localhost:15678/workflow/RelayDeskHandoff1"
-                target="_blank"
-                rel="noopener"
-                >Inspect in n8n <span data-icon="external"></span
-              ></a>
-            </article>
-            <article class="panel automation-card">
-              <span class="automation-icon amber"
-                ><span data-icon="mail"></span
-              ></span>
-              <h2>Optional email intake</h2>
-              <p>
-                Connect an IMAP mailbox to submit email requests through the
-                same pipeline. No outbound email is sent.
-              </p>
-              <span class="tag neutral">Mailbox setup required</span
-              ><a
-                class="workflow-link"
-                href="http://localhost:15678/workflow/RelayDeskEmail01"
-                target="_blank"
-                rel="noopener"
-                >Configure in n8n <span data-icon="external"></span
-              ></a>
-            </article>
-          </div>
-          <div class="panel">
-            <div class="panel-heading">
-              <div>
-                <h2>Handoff history</h2>
-                <p>
-                  These receipts record an internal handoff, not an external
-                  message.
-                </p>
-              </div>
-              <span id="outbox-count" class="tag neutral"></span>
-            </div>
-            <div id="outbox-list"></div>
-          </div>
-        </section>
-        <footer class="footer">
-          <span
-            ><span class="footer-mark">R</span>RelayDesk · An original n8n
-            capstone</span
-          ><span
-            >Local workspace <span class="footer-separator">·</span> Human
-            decisions, visible evidence</span
-          >
-        </footer>
-      </main>
-    </div>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6f7fb">
+<meta name="description" content="RelayDesk — intelligent support operations, connected to n8n."><title>RelayDesk — Support intelligence</title>
+<link rel="icon" href="/static/mark.svg" type="image/svg+xml"><link rel="stylesheet" href="/static/v2.css"><script type="module" src="/static/app.js"></script>
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<aside class="sidebar">
+ <a class="brand" href="#overview"><img src="/static/mark.svg" alt="" width="34" height="34"><span>Relaydesk<span class="brand-dot">.</span></span></a>
+ <div class="workspace"><span class="workspace-icon">R</span><div>Relay workspace<small>Support intelligence</small></div><span data-icon="chevron"></span></div>
+ <p class="nav-label">WORKSPACE</p>
+ <nav aria-label="Main navigation">
+ <button data-view="overview" class="nav-item active"><span data-icon="grid"></span>Overview</button>
+ <button data-view="queue" class="nav-item"><span data-icon="inbox"></span>Requests<span id="nav-count" class="nav-count">0</span></button>
+ <button data-view="knowledge" class="nav-item"><span data-icon="book"></span>Knowledge</button>
+ <button data-view="automations" class="nav-item"><span data-icon="workflow"></span>Workflows<span class="nav-new">LIVE</span></button>
+ </nav>
+ <div class="nav-divider"></div><p class="nav-label">CONNECTED SYSTEMS</p>
+ <a id="canvas-link" class="nav-item n8n-link" href="http://localhost:15678" target="_blank" rel="noopener"><span class="n8n-mini">n8n</span>Workflow editor<span data-icon="external"></span></a>
+ <button class="nav-item" id="about-button"><span data-icon="help"></span>Workspace guide</button>
+ <div class="sidebar-bottom"><div class="engine-card"><div class="engine-card-top"><span class="engine-orbit">◎</span><span class="tag mint" id="side-engine-label">CHECKING</span></div><h3>Intelligence with oversight.</h3><p>Specialist agents prepare the work. You make the decision.</p><button class="text-button" data-goto="automations">Explore your workflows <span data-icon="external"></span></button></div><div class="operator"><span class="avatar">OP</span><div>Support operator<small>Local workspace</small></div><span class="operator-dot"></span></div></div>
+</aside>
+<div class="shell"><header class="topbar"><div class="breadcrumbs"><span class="breadcrumb-icon" data-icon="grid"></span>Workspace<span>/</span><strong id="breadcrumb">Overview</strong></div><div class="top-actions"><button class="command-search" id="global-search"><span data-icon="search"></span><span>Search requests</span><kbd id="search-kbd">Ctrl K</kbd></button><button id="engine-status" class="engine-status" data-goto="automations">Checking connection</button><button id="refresh-button" class="icon-button" aria-label="Refresh workspace" title="Refresh workspace"><span data-icon="refresh"></span></button><span class="top-avatar">OP</span></div></header>
+<main id="main" tabindex="-1"><div id="connection-banner" class="banner" hidden></div>
+<section id="overview-view" class="view">
+ <div class="page-heading"><div><p class="eyebrow">YOUR OPERATIONS, IN FOCUS</p><h1>Support overview<span class="heading-dot">.</span></h1><p class="subtitle">A clear view of your requests, knowledge, and intelligent workflows.</p></div><div class="heading-actions"><span class="date-label" id="today-label"></span><button class="button primary" id="new-button"><span data-icon="plus"></span>New request</button></div></div>
+ <div class="stats" id="stats"></div>
+ <div class="overview-grid">
+ <section class="panel queue-panel"><div class="panel-heading"><div><span class="section-kicker">YOUR NEXT DECISIONS</span><h2>Ready for review <span class="count-pill" id="review-count">0</span></h2></div><button class="text-button" data-goto="queue">View all requests <span data-icon="chevron"></span></button></div><div class="list-columns"><span>REQUEST / REQUESTER</span><span>STATUS</span></div><div id="attention-list" class="request-list"></div><div class="panel-foot"><span class="live-ring"></span>Every response stays a draft until you approve it.</div></section>
+ <section class="panel workflow-panel"><div class="panel-heading"><div><span class="section-kicker">CONNECTED INTELLIGENCE</span><h2>Inside the workflow</h2></div><span class="n8n-wordmark">n8n</span></div><div class="pipeline" id="pipeline"></div><div class="human-gate"><span data-icon="shield"></span><div><strong>One essential final step. You.</strong><p>Approval is recorded before any handoff.</p></div><span class="gate-line"></span></div><button class="panel-link" data-goto="automations">Inspect the live connection <span data-icon="external"></span></button></section>
+ <section class="panel mix-panel"><div class="panel-heading"><div><span class="section-kicker">WORKLOAD BREAKDOWN</span><h2>Where requests land</h2></div><span class="tag neutral">Current workspace</span></div><div id="service-mix"></div></section>
+ <section class="panel activity-panel"><div class="panel-heading"><div><span class="section-kicker">DURABLE EXECUTION</span><h2>Processing activity</h2></div><span class="tag neutral" id="worker-badge">Checking worker</span></div><div id="recent-jobs"></div><div class="panel-foot">Background jobs keep working when the browser closes.</div></section>
+ </div>
+</section>
+<section id="queue-view" class="view" hidden><div class="page-heading"><div><p class="eyebrow">SERVICE OPERATIONS</p><h1>Request inbox<span class="heading-dot">.</span></h1><p class="subtitle">Review the evidence. Refine the response. Move the work forward.</p></div><div class="heading-actions"><button class="button secondary" id="export-button"><span data-icon="download"></span>Export</button><button class="button primary" data-new-request><span data-icon="plus"></span>New request</button></div></div><div class="status-pills" id="status-pills" role="tablist" aria-label="Quick status filters"></div><div class="panel"><div class="filters"><label class="search-box"><span data-icon="search"></span><input id="queue-search" placeholder="Search by request, person, location…" aria-label="Search requests"></label><select id="status-filter" aria-label="Filter by status"><option value="">All statuses</option><option value="needs_review">Needs review</option><option value="approved">Approved</option><option value="resolved">Resolved</option></select><select id="category-filter" aria-label="Filter by service"><option value="">All services</option><option value="network">Network</option><option value="vpn">VPN</option><option value="account">Account</option><option value="software">Software</option><option value="device">Device</option><option value="other">Other</option></select></div><div id="queue-table"></div></div></section>
+<section id="knowledge-view" class="view" hidden><div class="page-heading"><div><p class="eyebrow">THE EVIDENCE LAYER</p><h1>Knowledge, connected<span class="heading-dot">.</span></h1><p class="subtitle">Reviewed procedures. Traceable sources. Better-informed responses.</p></div><button class="button primary" id="add-knowledge-button"><span data-icon="plus"></span>Add procedure</button></div><div class="knowledge-summary" id="knowledge-summary"></div><form id="knowledge-search-form" class="panel retrieval-playground"><div><span class="section-kicker">RETRIEVAL PLAYGROUND</span><h2>Find the source behind an answer</h2><p>Cached hybrid lexical retrieval · BM25 + character similarity</p></div><div class="retrieval-input"><label class="search-box"><span data-icon="search"></span><input id="knowledge-query" minlength="3" maxlength="2000" placeholder="e.g. VPN tunnel keeps disconnecting" aria-label="Retrieval question" required></label><select id="knowledge-category" aria-label="Filter evidence by service"><option value="">All services</option><option value="network">Network</option><option value="vpn">VPN</option><option value="account">Account</option><option value="software">Software</option><option value="device">Device</option></select><button class="button primary" type="submit">Find evidence</button></div></form><div id="retrieval-results" aria-live="polite"></div><div class="section-heading"><h2>Procedure library</h2><span id="document-count" class="muted"></span></div><div id="knowledge-grid" class="knowledge-grid"></div><div class="notice"><span data-icon="info"></span><p>Included procedures are fictional demo material. Custom sources are unreviewed until explicitly approved for this library. Rank scores measure lexical relevance, not answer confidence.</p></div></section>
+<section id="automations-view" class="view" hidden><div class="page-heading"><div><p class="eyebrow">ORCHESTRATION CONTROL</p><h1>Every step, visible<span class="heading-dot">.</span></h1><p class="subtitle">Your website, durable worker, and n8n workflows in one operations view.</p></div><div class="heading-actions"><button class="button secondary" id="check-connection"><span data-icon="refresh"></span>Test connection</button><button class="button primary" id="run-handoff"><span data-icon="play"></span>Run handoffs</button></div></div><div id="connection-grid" class="connection-grid"></div><section class="panel topology-panel"><div class="panel-heading"><div><span class="section-kicker">SYSTEM TOPOLOGY</span><h2>From request to reviewed resolution</h2></div><span class="tag violet">n8n orchestrated</span></div><div class="system-topology"><div><span data-icon="inbox"></span><strong>Website</strong><small>Async intake</small></div><i></i><div><span data-icon="clock"></span><strong>Durable queue</strong><small>Leases + retry</small></div><i></i><div class="topology-n8n"><span data-icon="workflow"></span><strong>n8n agents</strong><small>Classify · draft · review</small></div><i></i><div><span data-icon="book"></span><strong>RAG index</strong><small>Versioned + cached</small></div><i></i><div><span data-icon="shield"></span><strong>Your approval</strong><small>Atomic handoff</small></div></div></section><div class="section-heading"><h2>n8n workflow library</h2><span class="muted">Configured templates · open the editor for publication state</span></div><div id="workflow-library" class="automation-cards"></div><section class="panel"><div class="panel-heading"><div><span class="section-kicker">EXECUTION MONITOR</span><h2>Background processing</h2></div><span id="jobs-count" class="tag neutral"></span></div><div id="jobs-list"></div></section><section class="panel handoff-panel"><div class="panel-heading"><div><span class="section-kicker">APPROVED ACTIONS</span><h2>Handoff history</h2><p>Internal support receipts, recorded by n8n.</p></div><span id="outbox-count" class="tag neutral"></span></div><div id="outbox-list"></div></section></section>
+<footer class="footer"><span><b class="footer-mark">R</b> RelayDesk <span class="footer-separator">/</span> Support intelligence</span><span>Local workspace <span class="footer-separator">·</span> Version 2.0</span></footer>
+</main></div>
     <dialog id="request-dialog" class="modal">
       <form id="request-form">
         <div class="modal-header">
           <div>
             <p class="eyebrow">WEB & VOICE INTAKE</p>
-            <h2>What needs a hand?</h2>
+            <h2>Let’s get it resolved.</h2>
           </div>
           <button
             type="button"
@@ -386,7 +81,7 @@
             id="report-text"
             minlength="8"
             maxlength="4000"
-            rows="5"
+            rows="4"
             placeholder="What happened, which service is affected, and what error do you see?"
             required
           ></textarea>
@@ -428,29 +123,32 @@
           ><label class="mode-option"
             ><input type="radio" name="mode" value="live" /><span
               ><strong>Local LLM</strong
-              ><small>Three Ollama specialist stages</small></span
+              ><small id="live-mode-note">Three Ollama specialist stages</small></span
             ></label
           >
         </fieldset>
         <div id="request-progress" class="progress-note" role="status" hidden>
           <span class="spinner"></span>
           <div>
-            <strong>Executing the n8n workflow</strong>
+            <strong>Your request is processing</strong>
             <p>
-              Local model runs may take a few minutes. Keep this dialog open.
+              The durable worker is running your n8n workflow. You can close this dialog; the job will continue.
             </p>
           </div>
         </div>
         <div class="modal-footer">
           <span class="microcopy">No action is taken before approval.</span
           ><button type="submit" class="button primary" id="submit-request">
-            <span data-icon="workflow"></span>Run support workflow
+            <span data-icon="workflow"></span>Submit request
           </button>
         </div>
       </form>
     </dialog>
     <dialog id="detail-dialog" class="drawer">
       <div id="detail-content"></div>
+    </dialog>
+    <dialog id="job-dialog" class="modal">
+      <div id="job-dialog-content"></div>
     </dialog>
     <dialog id="knowledge-dialog" class="modal">
       <form id="knowledge-form">
@@ -520,15 +218,17 @@
         </button>
       </div>
       <p>
-        RelayDesk is an original IT support capstone. n8n coordinates three
-        bounded specialist roles: classifier, resolver and reviewer. Native
-        LangChain nodes connect them to a local Ollama model.
+        RelayDesk 2.0 is an original IT support capstone orchestrated in n8n.
+        Requests enter a durable SQLite job queue, are dispatched by an
+        independent worker with lease recovery, and flow through three native
+        n8n specialist agents (classifier, resolver and reviewer) connected to a
+        local Ollama model.
       </p>
       <p>
-        The data service provides a LangChain BM25 retriever and SQLite
-        persistence. The included procedures are fictional. A source citation
-        and model review do not prove a response is correct; the operator
-        reviews the final answer.
+        The data service provides a versioned, cached LangChain hybrid lexical
+        retriever (BM25 + character 3-gram similarity), authenticated n8n
+        connection verification, and atomic approval/outbox persistence. The
+        included procedures are fictional; operator review remains mandatory.
       </p>
       <p>
         The portal runs as a local single-user workspace. Optional mailbox
@@ -574,3 +274,4 @@
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
   </body>
 </html>
+
